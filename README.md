@@ -320,3 +320,4 @@ Found 29 errors.
 ```
 
 - 文档不足
+- Deno.connect timeout
