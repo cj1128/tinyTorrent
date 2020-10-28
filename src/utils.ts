@@ -136,3 +136,13 @@ export const connectWithTimeout = (options: Deno.ConnectOptions, ms: number): Pr
     }, ms)
   })
 }
+
+export const isLocalHostIPV6 = (buf: Uint8Array): boolean => {
+  if (buf.length !== 16) return false
+
+  for (let i = 0; i < 15; i++) {
+    if (buf[i] !== 0) return false
+  }
+
+  return buf[15] === 1
+}

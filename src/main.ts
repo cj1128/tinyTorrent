@@ -19,6 +19,7 @@ import {
   readFull,
   sleep,
   connectWithTimeout,
+  isLocalHostIPV6,
 } from "./utils.ts"
 
 type Sha1Hash = Uint8Array // 20 bytes
@@ -81,7 +82,7 @@ const parseTorrentFile = (filepath: string): Torrent => {
 }
 
 const fetchPeers = async (torrent: Torrent): Promise<Peer[]> => {
-  log.info(`fetch peer urls: ${torrent.trackerURL}`)
+  log.info(`fetch peers url: ${torrent.trackerURL}`)
   log.info(`info hash: ${toHex(torrent.infoHash)}`)
 
   const query = {
@@ -100,15 +101,38 @@ const fetchPeers = async (torrent: Torrent): Promise<Peer[]> => {
   assert(res.status === 200)
 
   const content = decodeBencode(await res.arrayBuffer()) as any
-  const peers = content.peers as Uint8Array
-  const peersCount = peers.length / 6
+  log.info(`peers response`)
+  console.log(content)
 
+  // ipv4
+  if (content.peers as string !== "") {
+    const peers = content.peers as Uint8Array
+    const peersCount = peers.length / 6
 
-  return new Array(peersCount).fill(0).map((_, i) => {
-    return parsePeer(peers.slice(i * 6, i * 6 + 6))
-  })
+    return new Array(peersCount).fill(0).map((_, i) => {
+      return parsePeer(peers.slice(i * 6, i * 6 + 6))
+    })
+  }
+
+  // ipv6, we only consider ::1
+  const result: Peer[] = []
+  const peers = content.peers6 as Uint8Array
+  for (let i = 0; i < peers.length / 18; i++) {
+    const content = peers.slice(i * 18, i * 18 + 18)
+    const dv = new DataView(content.buffer, content.byteOffset)
+    const host = content.slice(0, 16)
+    const port = dv.getUint16(16, false)
+
+    if (isLocalHostIPV6(host) && port !== PORT) {
+      result.push({
+        ip: "[::1]",
+        port,
+      })
+    }
+  }
+
+  return result
 }
-
 
 interface PieceResult {
   pieceIndex: number,
@@ -132,7 +156,6 @@ class Downloader {
 
   constructor(torrent: Torrent, peers: Peer[]) {
     this.torrent = torrent
-    assert(peers.length > 0)
     this.peers = peers
 
     this.workQueue = new Array(this.torrent.pieceCount).fill(0).map((_, idx) => idx)
@@ -263,14 +286,11 @@ class Worker {
     this.info(`start to handshake`)
     const { infoHash, peerID } = this.torrent
     const payload = Worker.genHandshakePayload(infoHash, peerID)
-    console.log("payload", payload)
     await conn.write(payload)
 
     // read response
-    let buf = new Uint8Array(10)
-    const t = await conn.read(buf)
-    console.log("2", t, buf)
-    // await readFull(conn, buf)
+    let buf = new Uint8Array(1)
+    await readFull(conn, buf)
     const protocolIDLength = buf[0]
     assert(protocolIDLength > 0)
 
@@ -309,6 +329,12 @@ const downloadTorrent = async (filepath: string) => {
 
   const peers = await fetchPeers(torrent)
   log.info(`peers fetched, total count: ${peers.length}`)
+
+  if (peers.length === 0) {
+    log.error("no peers")
+    Deno.exit(1)
+  }
+
   console.log(peers)
 
   const downloader = new Downloader(torrent, peers)
