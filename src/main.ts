@@ -150,9 +150,9 @@ class Downloader {
   // piece index
   workQueue: number[]
 
-  result: PieceResult[] = [];
+  result: PieceResult[] = []
 
-  workingWorkers: number = 0;
+  workingWorkers = 0
 
   constructor(torrent: Torrent, peers: Peer[]) {
     this.torrent = torrent
@@ -255,7 +255,7 @@ class Worker {
     this.info(`connection established`)
 
     while (true) {
-      let pieceIndex = this.fetchWork()
+      const pieceIndex = this.fetchWork()
       if (pieceIndex === undefined) return
 
       try {

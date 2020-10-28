@@ -85,7 +85,7 @@ export const readFull = async (r: Deno.Reader, buf: Uint8Array) => {
 
   while (true) {
     const b = new Uint8Array(remaining)
-    let read = await r.read(b)
+    const read = await r.read(b)
 
     // EOF
     if (read === null) {
