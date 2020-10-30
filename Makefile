@@ -1,11 +1,11 @@
-flags := -c tsconfig.json --allow-read --allow-net
+flags := -c tsconfig.json --allow-read --allow-net --allow-write
 
 dev:
 	deno run --no-check $(flags) src/main.ts tmp/test.torrent
 .PHONY: dev
 
 run:
-	deno run $(flags) src/main.ts tmp/test.torrent
+	deno run $(flags) src/main.ts debian.torrent
 .PHONY: dev
 
 test:

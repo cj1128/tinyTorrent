@@ -2,8 +2,11 @@ import {
   assert,
   createHash,
 } from "./deps.ts"
+import { Message, MSG_ID } from "./main.ts"
 
-export const sha1Hash = (buf: ArrayBuffer): Uint8Array => {
+const te = new TextEncoder()
+
+export const sha1Hash = (buf: Uint8Array): Uint8Array => {
   const hash = createHash("sha1")
   hash.update(buf)
   return new Uint8Array(hash.digest())
@@ -145,4 +148,52 @@ export const isLocalHostIPV6 = (buf: Uint8Array): boolean => {
   }
 
   return buf[15] === 1
+}
+
+export const BitTorrent = {
+  genRandomPeerID(): string {
+    return genRandomStr(20)
+  },
+
+  genHandshakePayload(infoHash: Uint8Array, peerID: string): Uint8Array {
+    const buf = new Deno.Buffer()
+    buf.writeSync(new Uint8Array([0x13]))
+    buf.writeSync(te.encode("BitTorrent protocol"))
+    buf.writeSync(new Uint8Array(new Array(8).fill(0)))
+    buf.writeSync(infoHash)
+    buf.writeSync(te.encode(peerID))
+
+    return buf.bytes()
+  },
+
+  parseHaveMessage(msg: Message): number {
+    assert(msg.id == MSG_ID.Have)
+    assert(msg.payload != null && msg.payload.length === 4)
+    const dv = new DataView(msg.payload.buffer, msg.payload.byteOffset)
+    return dv.getUint32(0, false)
+  },
+
+  parsePieceMessage(pieceIndex: number, totalLength: number, msg: Message): {
+    content: Uint8Array,
+    offset: number,
+  } {
+    assert(msg.id === MSG_ID.Piece)
+    assert(msg.payload != null && msg.payload.length >= 8, "valid payload")
+
+    const dv = new DataView(msg.payload.buffer, msg.payload.byteOffset)
+
+    const parsedIndex = dv.getUint32(0, false)
+    assert(parsedIndex === pieceIndex, "piece index unmatched")
+
+    const offset = dv.getUint32(4, false)
+    assert(offset <= totalLength, "invalid offset")
+
+    const content = msg.payload.slice(8)
+    assert(offset + content.length <= totalLength, `data(length ${content.length}) too long for offset ${offset} with total length ${totalLength}`)
+
+    return {
+      content,
+      offset,
+    }
+  }
 }
