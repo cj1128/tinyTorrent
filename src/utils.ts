@@ -2,7 +2,8 @@ import {
   assert,
   createHash,
 } from "./deps.ts"
-import { Message, MSG_ID } from "./main.ts"
+import { MSG_ID } from "./downloader.ts"
+import { Message } from "./worker.ts"
 
 const te = new TextEncoder()
 
