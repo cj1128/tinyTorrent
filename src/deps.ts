@@ -1,9 +1,7 @@
-import { LogLevelNames } from "https://deno.land/std@0.74.0/log/levels.ts"
-
 export {
   encode as encodeBencode,
   decode as decodeBencode,
-} from "../../deno-bencode/mod.ts"
+} from "https://deno.land/x/bencode@v0.1.2/mod.ts"
 
 export {
   createHash,

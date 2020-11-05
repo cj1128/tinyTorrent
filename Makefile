@@ -5,7 +5,7 @@ dev:
 .PHONY: dev
 
 run:
-	deno run $(flags) src/main.ts debian.torrent
+	deno run $(flags) src/main.ts tmp/test.torrent
 .PHONY: dev
 
 test:

@@ -97,7 +97,8 @@ const fetchPeers = async (torrent: Torrent): Promise<Peer[]> => {
 
   const queryStr = Object.entries(query).map(([k, v]) => `${k}=${v}`).join("&")
 
-  const res = await ky.get(torrent.trackerURL + "?" + queryStr)
+  // const res = await ky.get(torrent.trackerURL + "?" + queryStr)
+  const res = await fetch(torrent.trackerURL + "?" + queryStr)
   assert(res.status === 200)
 
   const content = decodeBencode(await res.arrayBuffer()) as any
