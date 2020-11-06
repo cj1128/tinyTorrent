@@ -1,4 +1,4 @@
-flags := -c tsconfig.json --allow-read --allow-net --allow-write
+flags := --allow-read --allow-net --allow-write
 
 dev:
 	deno run --no-check $(flags) src/main.ts tmp/test.torrent -- --debug

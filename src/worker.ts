@@ -2,7 +2,7 @@ import Bitfield from "./bitfield.ts"
 import { assert, log } from "./deps.ts"
 import { MAX_BLOCK_SIZE, MAX_PENDING_REQUEST, MSG_ID, PieceResult, PieceWork } from "./downloader.ts"
 import { Torrent } from "./main.ts"
-import { BitTorrent, connectWithTimeout, Peer, readFull, typedArraysAreEqual } from "./utils.ts"
+import { BitTorrent, connectWithTimeout, Peer, readFull, sha1Hash, typedArraysAreEqual } from "./utils.ts"
 
 export interface Message {
   id: number,
@@ -91,6 +91,7 @@ export class Worker {
         this.onResult(result)
       } catch (err) {
         this.error(`failed to download piece#${pieceIndex}: ${err}`)
+        this.putBackWork(work)
       }
     }
 
@@ -154,11 +155,31 @@ export class Worker {
 
     assert(downloaded === work.length)
 
+    // check hash
+    assert(typedArraysAreEqual(sha1Hash(buf), work.hash), "piece hash invalid")
+
+    // send `have` message
+    this.sendHave(work.pieceIndex)
+      .catch(err => {
+        // we don't care
+      })
+
     return {
       pieceIndex: work.pieceIndex,
       workerIndex: this.workerIndex,
       content: buf,
     }
+  }
+
+  async sendHave(pieceIndex: number) {
+    const payload = new Uint8Array(4)
+    const dv = new DataView(payload.buffer)
+    dv.setUint32(0, pieceIndex, false)
+
+    await this.sendMessage({
+      id: MSG_ID.Have,
+      payload,
+    })
   }
 
   async sendBlockRequest(pieceIndex: number, offset: number, blockSize: number) {

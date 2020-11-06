@@ -7,7 +7,7 @@ NOTE: **This is a _leech_, it doesn't upload any data to peers!**
 ## Usage
 
 ```bash
-$ deno run -c tsconfig.json --allow-read --allow-net --allow-write src/main.ts <file.torrent> -- --debug # enable debug log
+$ deno run --allow-read --allow-net --allow-write src/main.ts <file.torrent> -- --debug # enable debug log
 ```
 
 ## Create a local test torrent file

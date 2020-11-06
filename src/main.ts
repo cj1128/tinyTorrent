@@ -2,7 +2,6 @@ import {
   assert,
   decodeBencode,
   encodeBencode,
-  ky,
   log,
 } from "./deps.ts"
 
