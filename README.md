@@ -2,7 +2,9 @@
 
 A tiny bittorrent client written in typescript for learning.
 
-NOTE: **This is a _leech_, it doesn't upload any data to peers!**
+For details, check my blog post [tinyTorrent: 从头写一个 Deno 的 BitTorrent 下载器](https://cjting.me/2020/10/31/tinytorrent-a-deno-bt-downloader/).
+
+NOTE: **This is a _leech_ client,  it doesn't upload any data to peers!**
 
 ## Usage
 
