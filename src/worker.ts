@@ -159,10 +159,11 @@ export class Worker {
     assert(typedArraysAreEqual(sha1Hash(buf), work.hash), "piece hash invalid")
 
     // send `have` message
-    this.sendHave(work.pieceIndex)
-      .catch(err => {
-        // we don't care
-      })
+    // we don't need to do this, because we don't upload data to peers
+    // this.sendHave(work.pieceIndex)
+    //   .catch(err => {
+    //     // we don't care
+    //   })
 
     return {
       pieceIndex: work.pieceIndex,
